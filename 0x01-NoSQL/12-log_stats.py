@@ -43,3 +43,7 @@ def nginx_stats_check():
         count = top_ip.get("count")
         ip_address = top_ip.get("ip")
         print("\t{}: {}".format(ip_address, count))
+
+
+if __name__ == "__main__":
+    nginx_stats_check()
