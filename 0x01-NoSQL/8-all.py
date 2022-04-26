@@ -3,7 +3,7 @@
 from typing import List
 
 
-def list_All(mongo_collection) -> List:
+def list_all(mongo_collection) -> List:
     """return empty list if no documents"""
     if mongo_collection is not None:
         return mongo_collection.find()
