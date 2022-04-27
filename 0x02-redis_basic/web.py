@@ -1,48 +1,40 @@
 #!/usr/bin/env python3
+""" Advanced - Module for Implementing an expiring
+    web cache and tracker
 """
-a python module to obtain the HTML content of a particular
-URL & returns it
-"""
+
 import redis
 import requests
-from functools import wraps
 from typing import Callable
+from functools import wraps
+
+rd = redis.Redis()
 
 
-def cache_page(method: Callable) -> Callable:
+def count_requests(method: Callable) -> Callable:
+    """ Counting with decorators how many times a request
+        has been made
     """
-    cache_page - function to cache a given url
-    Arguments:
-        the given function
-    Returns:
-        the function passed as argument
-    """
-    obj = redis.Redis()
 
     @wraps(method)
-    def wrapper(args):
-        """ a wrapper function to return a page &
-        increment the number of times the page has been accessed
-        """
-        obj.incr("count:{}" + args)
-        in_cache = obj.get("cached_page" + args)
-        if in_cache:
-            return in_cache.decode("utf-8")
-        html = method(args)
-        obj.set("cached_page:" + args, html, 10)
+    def wrapper(url):
+        """ Wrapper for decorator functionality """
+        rd.incr(f"count:{url}")
+        cached_html = rd.get(f"cached:{url}")
+        if cached_html:
+            return cached_html.decode('utf-8')
+
+        html = method(url)
+        rd.setex(f"cached:{url}", 10, html)
         return html
 
     return wrapper
 
 
-@cache_page
+@count_requests
 def get_page(url: str) -> str:
+    """ requests module to obtain the HTML
+        content of a particular URL and returns it.
     """
-    get_page - function to get page & returns it
-    Arguments:
-        url: the given url
-    Returns:
-        the obtained html page
-    """
-    html = requests.get(url).text
-    return html
+    req = requests.get(url)
+    return req.text
