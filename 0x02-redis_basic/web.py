@@ -31,6 +31,7 @@ def cache_page(method: Callable) -> Callable:
         html = method(args)
         obj.set("cached_page:" + args, html, 10)
         return html
+
     return wrapper
 
 
