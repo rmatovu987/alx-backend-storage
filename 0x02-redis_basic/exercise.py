@@ -21,7 +21,25 @@ def call_history(method: Callable) -> Callable:
         data = method(self, *args, **kwds)
         self._redis.rpush(outputs, str(data))
         return data
+
     return wrapper
+
+
+def replay(method: Callable):
+    """ display the history call """
+    method_key = method.__qualname__
+    inputs = method_key + ":inputs"
+    outputs = method_key + ":outputs"
+    redis = method.__self__._redis
+    count = redis.get(method_key).decode("utf-8")
+    print("{} was called {} times:".format(method_key, count))
+    ListInput = redis.lrange(inputs, 0, -1)
+    ListOutput = redis.lrange(outputs, 0, -1)
+    allData = list(zip(ListInput, ListOutput))
+    for key, data in allData:
+        attr, data = key.decode("utf-8"), data.decode("utf-8")
+        print("{}(*{}) -> {}".format(method_key, attr, data))
+
 
 def count_calls(method: Callable) -> Callable:
     """Counts method calls"""
@@ -32,6 +50,7 @@ def count_calls(method: Callable) -> Callable:
         """wrapped function"""
         self._redis.incr(method_key)
         return method(self, *args, **kwargs)
+
     return wrapper
 
 
