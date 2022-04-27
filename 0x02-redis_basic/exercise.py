@@ -2,9 +2,22 @@
 """Create a Cache class. In the __init__ method, store an instance of the Redis client as a private variable named
 _redis (using redis.Redis()) and flush the instance using flushdb. """
 import uuid
+from functools import wraps
 from typing import Union, Optional, Callable
 
 import redis
+
+
+def count_calls(method: Callable) -> Callable:
+    """Counts method calls"""
+    method_key = method.__qualname__
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        """wrapped function"""
+        self._redis.incr(method_key)
+        return method(self, *args, **kwargs)
+    return wrapper
 
 
 class Cache:
@@ -14,6 +27,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """Method that takes a data argument and returns a string"""
         random_key = str(uuid.uuid1())
