@@ -8,6 +8,21 @@ from typing import Union, Optional, Callable
 import redis
 
 
+def call_history(method: Callable) -> Callable:
+    """ memorize user actions"""
+    method_key = method.__qualname__
+    inputs = method_key + ':inputs'
+    outputs = method_key + ':outputs'
+
+    @wraps(method)
+    def wrapper(self, *args, **kwds):
+        """ function  wrapped """
+        self._redis.rpush(inputs, str(args))
+        data = method(self, *args, **kwds)
+        self._redis.rpush(outputs, str(data))
+        return data
+    return wrapper
+
 def count_calls(method: Callable) -> Callable:
     """Counts method calls"""
     method_key = method.__qualname__
@@ -28,6 +43,7 @@ class Cache:
         self._redis.flushdb()
 
     @count_calls
+    @call_history
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """Method that takes a data argument and returns a string"""
         random_key = str(uuid.uuid1())
