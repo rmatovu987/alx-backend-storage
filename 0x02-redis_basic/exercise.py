@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Create a Cache class. In the __init__ method, store an instance of the Redis client as a private variable named
+"""Create a Cache class. In the __init__ method,
+store an instance of the Redis client as a private variable named
 _redis (using redis.Redis()) and flush the instance using flushdb. """
 import uuid
 from functools import wraps
@@ -69,7 +70,8 @@ class Cache:
         self._redis.mset({random_key: data})
         return random_key
 
-    def get(self, key: str, fn: Optional[Callable] = None) -> Union[str, bytes, int, float]:
+    def get(self, key: str,
+            fn: Optional[Callable] = None) -> Union[str, bytes, int, float]:
         """Take a key and return the type"""
         if fn:
             return fn(self._redis.get(key))
